@@ -38,7 +38,7 @@
 #' @author K. Hommik, C. J. Fitzgerald
 #' 
 
-GTGDomeLBSPRSim <- function(StockPars, FleetPars, SizeBins=NULL)  {
+simLBSPRDome <- function(StockPars, FleetPars, SizeBins=NULL)  {
 
   sink(stdout(), type="message")  
   # Assign Variables 
