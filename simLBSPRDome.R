@@ -1,26 +1,42 @@
-#################################################################
-# The original GTG LBSPR code is produced by Hordyk et al. 2016 #
-# Accessed from https://github.com/AdrianHordyk/GTG_LBSPR      #
-#################################################################
-#################################################################
-# Original GTG LBSPR code was modified by adding the options for# 
-# dome-shaped selevtivity (normal & log-normal selectivity).    #
-# Modifications to the code were made by Hommik et al.          #
-#################################################################
-
-#################################################################
-#               Some general instructions:                      #
-# The code is modified such that it can fit dome-shaped         #
-# selectivity (normal and log-normal).                          #
-# User has to pre-specify selectivity parameters derived from   #
-# SELECT method (Millar & Fryer, 1999).                         #
-# Selectivity parameters are defined in lines: 474-476.         #
-# In line 477 minimum landing limit (MLL) can be defined.       #
-# If MLL is defined then model assumes that selection           #
-# probability for lengths < MLL is 0.                           #
-#################################################################
-
-#runmod<-GTGLBSPRSim(StockPars, Fleet, SizeBins, sel)
+#' @title
+#' LBSPR-dome simulation model
+#' 
+#' @description 
+#' Per recruit simulation of exploited stock
+#' 
+#' @details 
+#' Simulates length composition, SPR, YPR of exploited stock 
+#' based on inputs including:
+#' \describe{
+#' \item{Life history parameters: growth, maturity, natural mortality.}
+#' \item{Relative fishing mortality F/M.}
+#' \item{Fishing gear selectivity-at-length.}
+#' \item{A set of length bins.}
+#' } 
+#' Per recruit theory is used to derive length compositions based 
+#' on the specified set of length bins.
+#' 
+#' Based on original GTG-LBSPR code developed by A. Hordyk 
+#' accessible in <https://github.com/AdrianHordyk/GTG_LBSPR>. The 
+#' original code was modified to include dome-shaped selectvity.
+#' Details of modification in Hommik et al. (2020) accessible at
+#' <https://doi.org/10.1016/j.fishres.2020.105574> User can pre-specify 
+#' selectivity parameters based on dome-shaped parameterisations from 
+#' SELECT method (Millar & Fryer, 1999). Minimum landing limit (MLL) 
+#' can be defined. If MLL is defined then model assumes that selection      
+#' probability for lengths < MLL is 0. 
+#' 
+#' @param StockPars Stock life-history parameters in a list.
+#' @param FleetPars A list of fishing fleet parameters: fishing mortality and selectivity-at-length.
+#' @param SizeBins List specifying how to create size bins including Linc length increment.
+#' 
+#' @seealso 
+#' * [optLBSPRDome()] optimises the likelihood of data by varying fishing parameters to obtain LBSPR fit.
+#' * [optfunLBSPRDome()] calculates negative log likelihood of data given per-recruit model prediction.
+#' 
+#' @return Output containing SPR, YPR, catch-length, population-length compositions for fished and unfished stocks
+#' @author K. Hommik, C. J. Fitzgerald
+#' 
 
 GTGDomeLBSPRSim <- function(StockPars, FleetPars, SizeBins=NULL)  {
 
@@ -326,179 +342,4 @@ GTGDomeLBSPRSim <- function(StockPars, FleetPars, SizeBins=NULL)  {
   Output$RelRec <- RelRec
   sink(type = "message")
   return(Output)
-}
-
-##########################
-# Optimisation Functions #
-##########################
-
-#OptFun calls the length dist simulation and SPR calculations for given M/K, Linf and sigma^2 or CV Linf and trial selectivity parameters plus F/M
-#the negative log likelihood (multinomial likelihood) of the observed length distn given life-history and selectivity parameters is returned
-
-OptFunDome <- function(tryFleetPars, fixedFleetPars, LenDat, StockPars, SizeBins=NULL, 
-                     mod=c("GTG", "LBSPR")) {
-  
-  Fleet <- NULL
-  Fleet$selectivityCurve <- fixedFleetPars$selectivityCurve
-  if(Fleet$selectivityCurve=="Logistic"){
-    if(length(tryFleetPars) == 3 & length(fixedFleetPars) == 1 & 
-       c("selectivityCurve") %in% names(fixedFleetPars)){
-      Fleet$SL1 <- exp(tryFleetPars[2]) * StockPars$Linf
-      Fleet$SL2 <- Fleet$SL1  + (exp(tryFleetPars[3]) * StockPars$Linf)
-    } else {
-      Fleet$SL1 <- fixedFleetPars$SL1
-      Fleet$SL2 <- fixedFleetPars$SL2
-    }
-  }else if(Fleet$selectivityCurve=="Knife"){
-    Fleet$MLLKnife <- fixedFleetPars$MLLKnife
-  }else if(Fleet$selectivityCurve %in% c("Normal.sca", "Normal.loc", "logNorm")){
-    Fleet$SL1 <- fixedFleetPars$SL1 
-    Fleet$SL2 <- fixedFleetPars$SL2
-    Fleet$SLmesh <- fixedFleetPars$SLmesh
-    if(!is.null(fixedFleetPars$SLMin)) Fleet$SLMin <- fixedFleetPars$SLMin
-  }
-  
-  
-  Fleet$FM <- exp(tryFleetPars[1]) # changed to 1 from 3, as other parameters are fixed
-
-  if (mod == "GTG") runMod <-  GTGDomeLBSPRSim(StockPars, Fleet, SizeBins)
-  if (mod == "LBSPR") runMod <- DomeLBSPRSim(StockPars, Fleet, SizeBins)
-  
-  LenDat <- LenDat + 1E-15 # add tiny constant for zero catches
-  LenProb <- LenDat/sum(LenDat)
-  predProb <- runMod$LCatchFished 
-  predProb <- predProb + 1E-15 # add tiny constant for zero catches
-  NLL <- -sum(LenDat * log(predProb/LenProb))
-
-  #Penalty functions are used when model estimates the selectivity  
-  # add penalty for SL50
-  if(length(tryFleetPars) == 3 & is.null(fixedFleetPars)){
-    trySL50 <- exp(tryFleetPars[2])
-    PenVal <- NLL
-    Pen <- dbeta(trySL50, shape1=5, shape2=0.01) * PenVal  #penalty for trySL50 values close to 1/SL50 close to Linf 
-    #if(!is.finite(NLL)) return(1E9 + runif(1, 1E4, 1E5))
-    if (Pen == 0) {Pen <- PenVal * trySL50}
-    # plot(xx, dbeta(xx, shape1=5, shape2=0.01) )
-    NLL <- NLL+Pen
-  }
-
-  return(NLL)
-}
-
-DoOptDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c("GTG", "LBSPR")) {
-  
-
-  SDLinf <- StockPars$CVLinf * StockPars$Linf
-  if (is.null(SizeBins)) {
-    SizeBins$Linc <- 1
-    SizeBins$ToSize <- StockPars$Linf + StockPars$MaxSD * SDLinf
-  }
-  if (is.null(SizeBins$ToSize)) 
-    SizeBins$ToSize <- StockPars$Linf + StockPars$MaxSD * SDLinf
-  
-  Linc <- SizeBins$Linc 
-  ToSize <- SizeBins$ToSize
-  
-  LenBins <- seq(from=0, by=Linc, to=ToSize)	
-  LenMids <- seq(from=0.5*Linc, by=Linc, length.out=length(LenBins)-1)
-  
-  # control parameters
-  control_opt <- list(maxit = 500, reltol = 1e-8, REPORT = 10, trace = 1)
-  
-    # Starting guesses
-  # sSL50 <- LenMids[which.max(LenDat)]/StockPars$Linf
-  # sDel <- 0.2 * LenMids[which.max(LenDat)]/StockPars$Linf
- 
-  selectivityCurve <- fixedFleetPars$selectivityCurve
-  sFM <- 0.5
-  
-  if(fixedFleetPars$selectivityCurve=="Logistic" && length(fixedFleetPars) == 1){ # general logistic
-    # Starting guesses
-    sSL50 <- LenMids[which.max(LenDat)]/StockPars$Linf 
-    sDel <- 0.2 * LenMids[which.max(LenDat)]/StockPars$Linf
-    Start <- log(c(sFM, sSL50, sDel))  #tryFleetPars
-    # lowerBound <- c(-Inf, log(0.01), 0.0 ) # not used in BFGS optime
-    # upperBound <- c(Inf, log(1+StockPars$CVLinf*StockPars$MaxSD), 1.0) # not used in BFGS optim
-    methodOpt <- "BFGS"
-    opt <- optim(par = Start, fn = OptFunDome, gr = NULL, 
-                 fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
-                 method = methodOpt, control= list(maxit=500, abstol=1E-20),
-                 hessian = TRUE)
-    mleNames <-  c("log(F/M)", "SL50/Linf", "Sdelta/Linf")
-  } else{ # dome-shaped or fixed selectivity logistic
-    Start <- log(c(sFM))  #tryFleetPars
-    lowerBound <- -20
-    upperBound <- 20
-    methodOpt <- "Brent"
-    opt <- optim(par = Start, fn = OptFunDome, gr = NULL, 
-                 fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
-                 method = methodOpt, lower = lowerBound, upper = upperBound, 
-                 control= list(maxit=500, abstol=1E-20),
-                 hessian = TRUE)
-    mleNames <- c("log(F/M)")
-  }
-  
-  # negative log-likelihood
-  newNLL<-opt$value # replaces objective in nlminb
-
-  # variance-covariance matrix for std error calculation
-  varcov <- solve(opt$hessian) # inverse of hessian matrix
-  
-  # maximum likelihood estimators and fishing parameters
-  MLE <- data.frame(Parameter = mleNames, "Initial" = Start, "Estimate" = opt$par, "Std. Error" = diag(varcov),
-                    check.names = FALSE)
-  
-  
-  # back-transform MLE to obtain fishing parameters
-  newFleet <- NULL 
-  newFleet$selectivityCurve <- selectivityCurve
-  newFleet$FM <- exp(opt$par[1])
-  lbPars <- c("F/M"  = exp(opt$par[1]))
-  if(fixedFleetPars$selectivityCurve=="Logistic"){
-    if(length(fixedFleetPars) == 1){
-      newFleet$SL1 <- exp(opt$par[2]) * StockPars$Linf 
-      newFleet$SL2 <- newFleet$SL1 + exp(opt$par[3]) * StockPars$Linf
-      lbPars <- c(lbPars, 
-                  "SL50" = exp(opt$par[2])*StockPars$Linf, 
-                  "SL95" = (exp(opt$par[2]) + exp(opt$par[3]))*StockPars$Linf)
-    } else{
-      newFleet$SL1 <- fixedFleetPars$SL1
-      newFleet$SL2 <- fixedFleetPars$SL2
-    }
-  }else if(selectivityCurve=="Knife"){
-    newFleet$MLLKnife <- fixedFleetPars$MLLKnife
-  } else if(selectivityCurve %in% c("Normal.sca", "Normal.loc", "logNorm")){ # prescribed values, not optimised
-    newFleet$SL1 <- fixedFleetPars$SL1
-    newFleet$SL2 <- fixedFleetPars$SL2
-    newFleet$SLmesh <- fixedFleetPars$SLmesh
-    if(!is.null(fixedFleetPars$SLMin)) newFleet$SLMin <- fixedFleetPars$SLMin
-  }
-  
-  # delta method to approximate standard error, CIs of estimates
-
-  # ML estimators are log(F/M)
-  sderr <- c(sqrt(exp(opt$par[1])*varcov[1,1]))
-  names(sderr) = "F/M"
-  if(fixedFleetPars$selectivityCurve=="Logistic" && length(fixedFleetPars) == 1){
-    # log(SL50/Linf), log((SL95-SL50)/Linf) in log-space
-    sderrSL50 <- sqrt((StockPars$Linf*exp(opt$par[2]))^2*varcov[2,2])
-    sderrSL95 <- sqrt((StockPars$Linf^2)*exp(opt$par[2])^2*varcov[2,2] + 
-                     exp(opt$par[3])^2*varcov[3,3] + 2*exp(opt$par[3])*exp(opt$par[2])*varcov[2,3])
-    sderr <-  c(sderr, SL50 = sderrSL50, SL95 = sderrSL95)
-  } 
-  
-  if (mod == "GTG") runMod <-  GTGDomeLBSPRSim(StockPars, newFleet, SizeBins)
-  if (mod == "LBSPR") runMod <- GTGLBSPRSim(StockPars, newFleet, SizeBins)
-
-  lbPars <- c(lbPars, "SPR" = runMod$SPR)
-  
-  Out <- NULL 
-  Out$lbPars <- lbPars      # fishing mortality, selectivity (where applicable), SPR
-  Out$lbStdErrs <- sderr    # standard error for fishing mortality,... 
-  Out$fixedFleetPars <- fixedFleetPars
-  Out$PredLen <- runMod$LCatchFished * sum(LenDat)
-  Out$NLL <- newNLL
-  Out$optimOut <- opt
-  Out$MLE <- MLE
-  return(Out)
 }
