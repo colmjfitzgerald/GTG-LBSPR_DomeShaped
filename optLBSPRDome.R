@@ -151,8 +151,8 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
     sderr <-  c(sderr, SL50 = sderrSL50, SL95 = sderrSL95)
   } 
   
-  if (mod == "GTG") runMod <-  GTGDomeLBSPRSim(StockPars, newFleet, SizeBins)
-  if (mod == "LBSPR") runMod <- GTGLBSPRSim(StockPars, newFleet, SizeBins)
+  if (mod == "GTG") runMod <-  simLBSPRDome(StockPars, newFleet, SizeBins)
+  if (mod == "LBSPR") runMod <- simLBSPRDome(StockPars, newFleet, SizeBins)
 
   lbPars <- c(lbPars, "SPR" = runMod$SPR)
   
