@@ -12,12 +12,10 @@
 #' @param mod Specification of simulation mode: either GTG or original LBSPR.
 #' 
 #' @details 
-#' Calculates the initial estimates of fishing parameters:
-#' \describe{
-#' \item{log(F/M) = log(0.5) for nonlinear optimisation.}
-#' \item{log(SL50/Linf) = log(length-at-max-count/Linf).}
-#' \item{log((SL95-SL50)/Linf = log(0.2*length-at-max-count/Linf).}
-#' }
+#' Calculates the initial estimates of fishing parameters for nonlinear optimisation:
+#'  * \code{log(F/M) = log(0.5)}
+#'  * \code{log(SL50/Linf) = log(Lmax/Linf)}
+#'  * \code{log((SL95-SL50)/Linf = log(0.2*Lmax/Linf)}
 #' and runs optimisation routine \code{optim} with these initial estimates. By setting \code{hessian = TRUE} 
 #' we can calculate the hessian, its inverse the variance-covariance matrix of the estimates and
 #' delta method approximations to standard errors.
@@ -28,20 +26,20 @@
 #' 
 #' Control parameters are specified through a control list and include
 #' \describe{
-#' \item{\code{maxit}: maximum number of iterations in optimisation.} 
-#' \item{\code{reltol}: relative convergence tolerance.}
-#' \item{\code{REPORT}: frequency of reports for the BFGS and other methods.}
-#' \item{\code{trace}: non-negative integer 0 - no tracing, 1-6 higher levels produce more tracing information.}
+#' \item{\code{maxit}}{Maximum number of iterations in optimisation.} 
+#' \item{\code{reltol}}{Relative convergence tolerance.}
+#' \item{\code{REPORT}}{Frequency of reports for the BFGS and other methods.}
+#' \item{\code{trace}}{Non-negative integer 0 - no tracing, 1-6 higher levels produce more tracing information.}
 #' } 
 #' 
 #' @return A list containing: 
 #' \describe{
-#' \item{\code{lbPars} optimised fishing parameters.}
-#' \item{\code{lbStdErrs} standard errors of optimised parameters.}
-#' \item{\code{fixedFleetPars} fixed fishing parameters.}
-#' \item{\code{PredLen} predicted proportions-at-length in catch.}
-#' \item{\code{NLL} nonlinear log-likelihood from optimisation.}
-#' \item{\code{MLE} maximum likelihood estimates (log transformed values).}
+#' \item{\code{lbPars}}{Optimised fishing parameters.}
+#' \item{\code{lbStdErrs}}{Standard errors of optimised parameters.}
+#' \item{\code{fixedFleetPars}}{Fixed fishing parameters.}
+#' \item{\code{PredLen}}{Predicted proportions-at-length in catch.}
+#' \item{\code{NLL}}{Nonlinear log-likelihood from optimisation.}
+#' \item{\code{MLE}}{Maximum likelihood estimates (log transformed values).}
 #' }
 #' 
 #' @seealso 
@@ -84,7 +82,7 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
     # lowerBound <- c(-Inf, log(0.01), 0.0 ) # not used in BFGS optime
     # upperBound <- c(Inf, log(1+StockPars$CVLinf*StockPars$MaxSD), 1.0) # not used in BFGS optim
     methodOpt <- "BFGS"
-    opt <- optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
+    opt <- stats::optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
                  fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
                  method = methodOpt, control= list(maxit=500, abstol=1E-20),
                  hessian = TRUE)
@@ -94,7 +92,7 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
     lowerBound <- -20
     upperBound <- 20
     methodOpt <- "Brent"
-    opt <- optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
+    opt <- stats::optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
                  fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
                  method = methodOpt, lower = lowerBound, upper = upperBound, 
                  control= list(maxit=500, abstol=1E-20),

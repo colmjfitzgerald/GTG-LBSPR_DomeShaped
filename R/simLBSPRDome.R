@@ -8,10 +8,10 @@
 #' Simulates length composition, SPR, YPR of exploited stock 
 #' based on inputs including:
 #' \describe{
-#' \item{Life history parameters: growth, maturity, natural mortality.}
-#' \item{Relative fishing mortality F/M.}
-#' \item{Fishing gear selectivity-at-length.}
-#' \item{A set of length bins.}
+#' \item{\code{StockPars}}{Life history parameters: growth, maturity, natural mortality.}
+#' \item{\code{FM}}{Relative fishing mortality F/M.}
+#' \item{\code{SL50, SL95}}{Fishing gear selectivity-at-length parameters.}
+#' \item{\code{SizeBins}}{Specifications for a set of length bins.}
 #' } 
 #' Per recruit theory is used to derive length compositions based 
 #' on the specified set of length bins.
@@ -124,8 +124,8 @@ simLBSPRDome <- function(StockPars, FleetPars, SizeBins=NULL)  {
     }  
   } 
   # Distribute Recruits across GTGS 
-  RecProbs <- dnorm(DiffLinfs, Linf, sd=SDLinf) / 
-    sum(dnorm(DiffLinfs, Linf, sd=SDLinf)) 
+  RecProbs <- stats::dnorm(DiffLinfs, Linf, sd=SDLinf) / 
+    sum(stats::dnorm(DiffLinfs, Linf, sd=SDLinf)) 
   
   # Length Bins 
   if (is.null(ToSize)) ToSize <- max(DiffLinfs, Linf + MaxSD * SDLinf)
@@ -290,12 +290,12 @@ simLBSPRDome <- function(StockPars, FleetPars, SizeBins=NULL)  {
   # Calc Unfished Fitness 
   Fit <- apply(FecGTGUnfished, 2, sum, na.rm=TRUE) # Total Fecundity per Group
   FitPR <- Fit/RecProbs # Fitness per-recruit
-  FitPR <- FitPR/median(FitPR)
+  FitPR <- FitPR/stats::median(FitPR)
   ## Debugging
   # plot(FitPR, ylim=c(0,2)) # Should be relatively flat for equal fitness across GTG
   
   # Mslope ignored in this version 
-  ObjFun <- sum((FitPR - median(FitPR, na.rm=TRUE))^2, na.rm=TRUE) # This needs to be minimised to make fitness approximately equal across GTG - by adjusting Mslope 
+  ObjFun <- sum((FitPR - stats::median(FitPR, na.rm=TRUE))^2, na.rm=TRUE) # This needs to be minimised to make fitness approximately equal across GTG - by adjusting Mslope 
   Pen <- 0; if (min(MKMat) <= 0 ) Pen <- (1/abs(min(MKMat)))^2 * 1E12 # Penalty for optimising Mslope
   
   ObjFun <- ObjFun + Pen

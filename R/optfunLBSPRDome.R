@@ -14,11 +14,11 @@
 #' 
 #' @details 
 #' Calculates: 
-#' \describe{
-#' \item{Predicted probability/proportions of fish caught in fishery in each length bin 
-#' for the estimated fishing parameters from the simulation routine.}
-#' \item{The negative log likelihood (multinomial) of the observed data for those fishing parameters.}
-#' }
+#' 
+#' * Predicted probability/proportions of fish caught in fishery in each length bin 
+#' for the estimated fishing parameters from the simulation routine.
+#' * The negative log likelihood (multinomial) of the observed data for those fishing parameters.
+#' 
 #' using -sum(LenDat * log(predProb/LenProb)). Penalises SL50/Linf values close to 1 using beta distribution.
 #' 
 #' @return NLL 
@@ -68,7 +68,7 @@ optfunLBSPRDome <- function(tryFleetPars, fixedFleetPars, LenDat, StockPars, Siz
   if(length(tryFleetPars) == 3 & is.null(fixedFleetPars)){
     trySL50 <- exp(tryFleetPars[2])
     PenVal <- NLL
-    Pen <- dbeta(trySL50, shape1=5, shape2=0.01) * PenVal  #penalty for trySL50 values close to 1/SL50 close to Linf 
+    Pen <- stats::dbeta(trySL50, shape1=5, shape2=0.01) * PenVal  #penalty for trySL50 values close to 1/SL50 close to Linf 
     #if(!is.finite(NLL)) return(1E9 + runif(1, 1E4, 1E5))
     if (Pen == 0) {Pen <- PenVal * trySL50}
     # plot(xx, dbeta(xx, shape1=5, shape2=0.01) )
