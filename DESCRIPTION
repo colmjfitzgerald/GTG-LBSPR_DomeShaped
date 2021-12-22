@@ -13,7 +13,8 @@ Description: Allows LB-SPR estimation with selectivity-at-length
   parameters fixed during optimisation and supports dome-shaped 
   selectivity specifications.
 Imports: stats
-Suggests: dplyr
+Suggests: knitr
+VignetteBuilder: knitr
 License: GPL-2
 Encoding: UTF-8
 RoxygenNote: 7.1.2
