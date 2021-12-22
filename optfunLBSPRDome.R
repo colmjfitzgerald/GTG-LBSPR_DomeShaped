@@ -54,8 +54,8 @@ optfunLBSPRDome <- function(tryFleetPars, fixedFleetPars, LenDat, StockPars, Siz
   
   Fleet$FM <- exp(tryFleetPars[1]) # changed to 1 from 3, as other parameters are fixed
 
-  if (mod == "GTG") runMod <-  GTGDomeLBSPRSim(StockPars, Fleet, SizeBins)
-  if (mod == "LBSPR") runMod <- DomeLBSPRSim(StockPars, Fleet, SizeBins)
+  if (mod == "GTG") runMod <-  simLBSPRDome(StockPars, Fleet, SizeBins)
+  if (mod == "LBSPR") runMod <- simLBSPRDome(StockPars, Fleet, SizeBins)
   
   LenDat <- LenDat + 1E-15 # add tiny constant for zero catches
   LenProb <- LenDat/sum(LenDat)
