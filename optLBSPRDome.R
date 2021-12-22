@@ -84,7 +84,7 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
     # lowerBound <- c(-Inf, log(0.01), 0.0 ) # not used in BFGS optime
     # upperBound <- c(Inf, log(1+StockPars$CVLinf*StockPars$MaxSD), 1.0) # not used in BFGS optim
     methodOpt <- "BFGS"
-    opt <- optim(par = Start, fn = OptFunDome, gr = NULL, 
+    opt <- optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
                  fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
                  method = methodOpt, control= list(maxit=500, abstol=1E-20),
                  hessian = TRUE)
@@ -94,7 +94,7 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
     lowerBound <- -20
     upperBound <- 20
     methodOpt <- "Brent"
-    opt <- optim(par = Start, fn = OptFunDome, gr = NULL, 
+    opt <- optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
                  fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
                  method = methodOpt, lower = lowerBound, upper = upperBound, 
                  control= list(maxit=500, abstol=1E-20),
