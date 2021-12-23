@@ -46,6 +46,8 @@
 #' * [optfunLBSPRDome()] calculates negative log likelihood of data given per-recruit model prediction.
 #' 
 #' @author K. Hommik, C. J. Fitzgerald
+#' 
+#' @export
 
 optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c("GTG", "LBSPR")) {
   

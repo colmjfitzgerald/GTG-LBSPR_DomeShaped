@@ -37,6 +37,8 @@
 #' @return Output containing SPR, YPR, catch-length, population-length compositions for fished and unfished stocks
 #' @author K. Hommik, C. J. Fitzgerald
 #' 
+#' @export
+#' 
 
 simLBSPRDome <- function(StockPars, FleetPars, SizeBins=NULL)  {
 
