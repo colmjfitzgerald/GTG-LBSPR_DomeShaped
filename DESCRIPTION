@@ -15,6 +15,6 @@ Description: Allows LB-SPR estimation with selectivity-at-length
 Imports: stats
 Suggests: rmarkdown, knitr, dplyr, ggplot2, withr
 VignetteBuilder: knitr
-License: GPL-2
+License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.1.2
