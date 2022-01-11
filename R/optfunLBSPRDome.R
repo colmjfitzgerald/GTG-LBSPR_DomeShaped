@@ -65,11 +65,11 @@ optfunLBSPRDome <- function(tryFleetPars, fixedFleetPars, LenDat, StockPars, Siz
 
   #Penalty functions are used when model estimates the selectivity  
   # add penalty for SL50
-  if(length(tryFleetPars) == 3 & is.null(fixedFleetPars)){
+  if(length(tryFleetPars) == 3 & fixedFleetPars$selectivityCurve == "Logistic"){#is.null(fixedFleetPars)){
     trySL50 <- exp(tryFleetPars[2])
     PenVal <- NLL
     Pen <- stats::dbeta(trySL50, shape1=5, shape2=0.01) * PenVal  #penalty for trySL50 values close to 1/SL50 close to Linf 
-    #if(!is.finite(NLL)) return(1E9 + runif(1, 1E4, 1E5))
+    if(!is.finite(NLL)) return(1E9 + stats::runif(1, 1E4, 1E5))
     if (Pen == 0) {Pen <- PenVal * trySL50}
     # plot(xx, dbeta(xx, shape1=5, shape2=0.01) )
     NLL <- NLL+Pen
