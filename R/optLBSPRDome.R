@@ -81,12 +81,12 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
     sSL50 <- LenMids[which.max(LenDat)]/StockPars$Linf 
     sDel <- 0.2 * LenMids[which.max(LenDat)]/StockPars$Linf
     Start <- log(c(sFM, sSL50, sDel))  #tryFleetPars
-    # lowerBound <- c(-Inf, log(0.01), 0.0 ) # not used in BFGS optime
-    # upperBound <- c(Inf, log(1+StockPars$CVLinf*StockPars$MaxSD), 1.0) # not used in BFGS optim
-    methodOpt <- "BFGS"
+    lowerBound <- c(-Inf, log(0.01), log(1e-5) )
+    upperBound <- c(log(5), log(1+StockPars$CVLinf*StockPars$MaxSD), 0.0)
+    methodOpt <- "L-BFGS-B"
     opt <- stats::optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
                  fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
-                 method = methodOpt, control= list(maxit=500, abstol=1E-20),
+                 method = methodOpt, control= list(maxit=500, factr=1E9),
                  hessian = TRUE)
     mleNames <-  c("log(F/M)", "SL50/Linf", "Sdelta/Linf")
   } else{ # dome-shaped or fixed selectivity logistic
