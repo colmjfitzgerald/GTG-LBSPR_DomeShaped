@@ -155,7 +155,7 @@ We then generate a random sample of `nFish` fish from a multinomial distribution
 ```{r multinomial_sample}
 nFish <- 500
 # set random seed safely
-withr::with_seed(999, 
+withr::with_seed(1, 
                  numbersMNL <- rmultinom(1, nFish, simGTG$LCatchFished))
 sampleCatch <- data.frame(lengthFish = simGTG$LenMids, 
                           numbersCatch = numbersMNL)

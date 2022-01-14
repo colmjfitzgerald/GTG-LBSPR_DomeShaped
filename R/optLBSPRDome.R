@@ -81,12 +81,12 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
     sSL50 <- LenMids[which.max(LenDat)]/StockPars$Linf 
     sDel <- 0.2 * LenMids[which.max(LenDat)]/StockPars$Linf
     Start <- log(c(sFM, sSL50, sDel))  #tryFleetPars
-    # lowerBound <- c(-Inf, log(0.01), 0.0 ) # not used in BFGS optime
-    # upperBound <- c(Inf, log(1+StockPars$CVLinf*StockPars$MaxSD), 1.0) # not used in BFGS optim
-    methodOpt <- "BFGS"
+    lowerBound <- c(-Inf, log(0.01), log(1e-5) )
+    upperBound <- c(log(5), log(1+StockPars$CVLinf*StockPars$MaxSD), 0.0)
+    methodOpt <- "L-BFGS-B"
     opt <- stats::optim(par = Start, fn = optfunLBSPRDome, gr = NULL, 
                  fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
-                 method = methodOpt, control= list(maxit=500, abstol=1E-20),
+                 method = methodOpt, control= list(maxit=500, factr=1E9),
                  hessian = TRUE)
     mleNames <-  c("log(F/M)", "SL50/Linf", "Sdelta/Linf")
   } else{ # dome-shaped or fixed selectivity logistic
@@ -105,8 +105,35 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
   # negative log-likelihood
   newNLL<-opt$value # replaces objective in nlminb
 
-  # variance-covariance matrix for std error calculation
-  varcov <- solve(opt$hessian) # inverse of hessian matrix
+  # variance-covariance matrix (inverse of hessian) for std error estimates
+  varcov <- tryCatch(solve(opt$hessian),
+                     error = function(cond) cond,
+                     warning = function(cond) cond 
+  )
+  
+  # error and warning handling - not how tryCatch was intended
+  if("error" %in% class(varcov) || "simpleError" %in% class(varcov)){
+    message(varcov$call)
+    message(varcov$message)
+    varcov <- matrix(NA, nrow = nrow(opt$hessian), ncol = ncol(opt$hessian))
+  } else if("warning" %in% class(varcov) || "simpleWarning" %in% class(varcov) ){
+    message(varcov$call)
+    message(varcov$message)
+    varcov <- matrix(NA, nrow = nrow(opt$hessian), ncol = ncol(opt$hessian))
+  }  else {
+    # if no warning or error - check values of inverse hessian
+    if(any(eigen(opt$hessian, only.values = TRUE)$values < 0)){
+      if(eigen(opt$hessian, only.values = TRUE)$values[1] > 0){
+        warning("Std. error estimate for log(FM) may be unreliable.")
+        warning("No std. error estimate for length-at-selectivity parameters.")
+        if(eigen(opt$hessian, only.values = TRUE)$values[3] < 0)  {
+          warning("DeltaSL = (SL95-SL50)/Linf too close to zero - step change in logistic curve.")
+        }
+      }
+      varcov <- matrix(NA, nrow = nrow(opt$hessian), ncol = ncol(opt$hessian))
+      #varcov[varcov < 0] <- NA   # allow estimate of standard error for F/M
+    }
+  }
   
   # maximum likelihood estimators and fishing parameters
   MLE <- data.frame(Parameter = mleNames, "Initial" = Start, "Estimate" = opt$par, "Std. Error" = diag(varcov),
@@ -163,6 +190,7 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
   Out$PredLen <- runMod$LCatchFished * sum(LenDat)
   Out$NLL <- newNLL
   Out$optimOut <- opt
+  Out$optVarcov <- varcov
   Out$MLE <- MLE
   return(Out)
 }
