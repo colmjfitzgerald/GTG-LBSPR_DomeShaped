@@ -4,17 +4,15 @@ Date: 2021-12-22
 Title: LB-SPR with dome-shaped selectivity
 Authors@R: c(person("Kristiina", "Hommik", role = c("aut")),
 			person("Colm", "Fitzgerald", role = c("aut", "cre"),
-			email = "colm.fitzgerald@fisheriesireland.ie")
+			email = "colm.fitzgerald@fisheriesireland.ie"),
+			person("Adrian", "Hordyk", role = c("aut"))
 			)
-Author: Kristiina Hommik [cre],
-		Colm Fitzgerald [aut, cre]
-Maintainer: Colm Fitzgerald <colm.fitzgerald@fisheriesireland.ie>
 Description: Allows LB-SPR estimation with selectivity-at-length 
   parameters fixed during optimisation and supports dome-shaped 
   selectivity specifications.
 Imports: stats
 Suggests: rmarkdown, knitr, dplyr, ggplot2, withr
 VignetteBuilder: knitr
-License: MIT + file LICENSE
+License: GPL (>= 3)
 Encoding: UTF-8
 RoxygenNote: 7.1.2
