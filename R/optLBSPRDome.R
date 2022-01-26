@@ -88,7 +88,7 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
                  fixedFleetPars=fixedFleetPars, LenDat=LenDat, StockPars=StockPars, SizeBins=SizeBins, mod=mod, 
                  method = methodOpt, control= list(maxit=500, factr=1E9),
                  hessian = TRUE)
-    mleNames <-  c("log(F/M)", "SL50/Linf", "Sdelta/Linf")
+    mleNames <-  c("log(F/M)", "log(SL50/Linf)", "log(Sdelta/Linf)")
   } else{ # dome-shaped or fixed selectivity logistic
     Start <- log(c(sFM))  #tryFleetPars
     lowerBound <- -20
