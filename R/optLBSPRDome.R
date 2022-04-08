@@ -168,12 +168,12 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
   # delta method to approximate standard error, CIs of estimates
 
   # ML estimators are log(F/M)
-  sderr <- c(sqrt(exp(opt$par[1])*varcov[1,1]))
+  sderr <- c(sqrt(exp(opt$par[1])^2*varcov[1,1]))
   names(sderr) = "F/M"
   if(fixedFleetPars$selectivityCurve=="Logistic" && length(fixedFleetPars) == 1){
     # log(SL50/Linf), log((SL95-SL50)/Linf) in log-space
     sderrSL50 <- sqrt((StockPars$Linf*exp(opt$par[2]))^2*varcov[2,2])
-    sderrSL95 <- sqrt((StockPars$Linf^2)*exp(opt$par[2])^2*varcov[2,2] + 
+    sderrSL95 <- (StockPars$Linf)*sqrt(exp(opt$par[2])^2*varcov[2,2] + 
                      exp(opt$par[3])^2*varcov[3,3] + 2*exp(opt$par[3])*exp(opt$par[2])*varcov[2,3])
     sderr <-  c(sderr, SL50 = sderrSL50, SL95 = sderrSL95)
   } 
