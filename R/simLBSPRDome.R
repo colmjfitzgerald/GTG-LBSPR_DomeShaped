@@ -86,6 +86,10 @@ simLBSPRDome <- function(StockPars, FleetPars, SizeBins=NULL)  {
     SLmesh <- FleetPars$SLmesh 
     SLMin <- FleetPars$SLMin
     if (is.null(SLMin)) SLMin <- NA
+  } else if(selectivityCurve == "exponentialLogistic"){     # exponential-logistic selectivity 
+    SLalpha <- FleetPars$SL1
+    SLbeta <- FleetPars$SL2
+    SLgamma <- FleetPars$SL3
   } else if(selectivityCurve=="Knife"){                    # Knife-edge selectivity
     MLLKnife <- FleetPars$MLLKnife
   }  
@@ -171,6 +175,11 @@ simLBSPRDome <- function(StockPars, FleetPars, SizeBins=NULL)  {
     if(!is.na(SLMin)) VulLen[LenBins < SLMin] <- 0
     VulLen <- VulLen/max(VulLen)
     
+  } else if(selectivityCurve == "exponentialLogistic"){     # exponential-logistic selectivity
+    VulLen <- (1/(1-SLgamma))*((1-SLgamma)/SLgamma)^SLgamma*
+      exp(SLalpha*SLgamma*(SLbeta - (LenBins+0.5*Linc)))/(1 + exp(SLalpha*(SLbeta - (LenBins+0.5*Linc))))
+    VulLen <- VulLen/max(VulLen)
+    
   }else if(selectivityCurve=="Knife"){    # knife-edge selectivity
     VulLen <- 0
     VulLen[(LenBins+0.5*Linc) < MLLKnife] <- 0
@@ -246,6 +255,11 @@ simLBSPRDome <- function(StockPars, FleetPars, SizeBins=NULL)  {
       VulLen2 <- VulLen2 + exp(-0.5*((log(LenMids)-log((SLk)*SLmesh[j]))/(SLsigma))^2)
     }
     if(!is.na(SLMin)) VulLen2[LenMids < SLMin] <- 0
+    VulLen2 <- VulLen2/max(VulLen2)
+    
+  } else if(selectivityCurve == "exponentialLogistic"){     # exponential-logistic selectivity
+    VulLen2 <- (1/(1-SLgamma))*((1-SLgamma)/SLgamma)^SLgamma*
+      exp(SLalpha*SLgamma*(SLbeta - LenMids))/(1 + exp(SLalpha*(SLbeta - LenMids)))
     VulLen2 <- VulLen2/max(VulLen2)
     
   }else if(selectivityCurve=="Knife"){   # knife-edge selectivity

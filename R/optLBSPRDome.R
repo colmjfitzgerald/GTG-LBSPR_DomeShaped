@@ -156,13 +156,17 @@ optLBSPRDome <- function(StockPars, fixedFleetPars, LenDat, SizeBins=NULL, mod=c
       newFleet$SL1 <- fixedFleetPars$SL1
       newFleet$SL2 <- fixedFleetPars$SL2
     }
-  }else if(selectivityCurve=="Knife"){
+  } else if(selectivityCurve=="Knife"){
     newFleet$MLLKnife <- fixedFleetPars$MLLKnife
   } else if(selectivityCurve %in% c("Normal.sca", "Normal.loc", "logNorm")){ # prescribed values, not optimised
     newFleet$SL1 <- fixedFleetPars$SL1
     newFleet$SL2 <- fixedFleetPars$SL2
     newFleet$SLmesh <- fixedFleetPars$SLmesh
     if(!is.null(fixedFleetPars$SLMin)) newFleet$SLMin <- fixedFleetPars$SLMin
+  } else if(selectivityCurve == "exponentialLogistic") {
+    newFleet$SL1 <- fixedFleetPars$SL1
+    newFleet$SL2 <- fixedFleetPars$SL2
+    newFleet$SL3 <- fixedFleetPars$SL3
   }
   
   # delta method to approximate standard error, CIs of estimates

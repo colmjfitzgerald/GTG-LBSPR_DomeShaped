@@ -49,6 +49,10 @@ optfunLBSPRDome <- function(tryFleetPars, fixedFleetPars, LenDat, StockPars, Siz
     Fleet$SL2 <- fixedFleetPars$SL2
     Fleet$SLmesh <- fixedFleetPars$SLmesh
     if(!is.null(fixedFleetPars$SLMin)) Fleet$SLMin <- fixedFleetPars$SLMin
+  } else if(Fleet$selectivityCurve == "exponentialLogistic"){
+    Fleet$SL1 <- fixedFleetPars$SL1 
+    Fleet$SL2 <- fixedFleetPars$SL2
+    Fleet$SL3 <- fixedFleetPars$SL3
   }
   
   
